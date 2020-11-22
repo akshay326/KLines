@@ -8,7 +8,7 @@ import math
 
 import numpy as np
 
-from set_of_points import SetOfPoints
+from klines.set_of_points import SetOfPoints
 
 
 class SetOfLines:

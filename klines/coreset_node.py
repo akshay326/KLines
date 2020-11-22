@@ -6,7 +6,7 @@
 
 
 from __future__ import division
-from set_of_lines import SetOfLines
+from klines.set_of_lines import SetOfLines
 
 
 

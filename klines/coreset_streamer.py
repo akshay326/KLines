@@ -15,8 +15,8 @@ import time
 
 import numpy as np
 
-from coreset_for_k_means_for_lines import CorsetForKMeansForLines
-from coreset_node import CoresetNode
+from klines.coreset_for_k_means_for_lines import CorsetForKMeansForLines
+from klines.coreset_node import CoresetNode
 
 #from parameters_config import ParameterConfig
 #from fancyimpute import BiScaler, KNN, NuclearNormMinimization, SoftImpute

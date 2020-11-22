@@ -8,7 +8,7 @@
 from __future__ import division
 import copy
 import numpy as np
-from set_of_points import SetOfPoints
+from klines.set_of_points import SetOfPoints
 import math
 
 

@@ -7,9 +7,9 @@
 from __future__ import division
 import copy
 import numpy as np
-from coreset_for_weighted_centers import CoresetForWeightedCenters
-from set_of_lines import SetOfLines
-from set_of_points import SetOfPoints
+from klines.coreset_for_weighted_centers import CoresetForWeightedCenters
+from klines.set_of_lines import SetOfLines
+from klines.set_of_points import SetOfPoints
 
 
 class CorsetForKMeansForLines:
