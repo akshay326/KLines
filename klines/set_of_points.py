@@ -219,6 +219,28 @@ class SetOfPoints:
 
     ##################################################################################
 
+    # def remove_from_set(self, C):
+    #     """
+    #     The method gets set of points C and remove each point in the set that also in C
+    #     Args:
+    #         C (SetOfPoints) : a set of points to remove from the set
+
+    #     Returns:
+    #         ~
+    #     """
+
+    #     indexes = []
+    #     C_indexes = C.indexes
+    #     self_indexes = self.indexes
+    #     for i in range(len(self_indexes)):
+    #         index = self_indexes[i]
+    #         if index in C.indexes:
+    #             indexes.append(i)
+    #     #indexes = C.indexes
+    #     self.points = np.delete(self.points, indexes, axis=0)
+    #     self.weights = np.delete(self.weights, indexes, axis=0)
+    #     self.sensitivities = np.delete(self.sensitivities, indexes, axis=0)
+    #     self.indexes = np.delete(self.indexes, indexes, axis=0)
     def remove_from_set(self, C):
         """
         The method gets set of points C and remove each point in the set that also in C
@@ -229,14 +251,7 @@ class SetOfPoints:
             ~
         """
 
-        indexes = []
-        C_indexes = C.indexes
-        self_indexes = self.indexes
-        for i in range(len(self_indexes)):
-            index = self_indexes[i]
-            if index in C.indexes:
-                indexes.append(i)
-        #indexes = C.indexes
+        indexes = np.searchsorted(self.indexes, C.indexes)
         self.points = np.delete(self.points, indexes, axis=0)
         self.weights = np.delete(self.weights, indexes, axis=0)
         self.sensitivities = np.delete(self.sensitivities, indexes, axis=0)
