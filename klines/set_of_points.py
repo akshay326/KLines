@@ -251,9 +251,13 @@ class SetOfPoints:
             ~
         """
 
-        indexes = np.searchsorted(self.indexes, C.indexes)
-        indexes[indexes==len(self.indexes)] = 0
-        indexes = self.indexes[indexes] == C.indexes
+        indexes = []
+        C_indexes = C.indexes
+        self_indexes = self.indexes
+        for i in range(len(self_indexes)):
+            index = self_indexes[i]
+            if index in C.indexes:
+                indexes.append(i)
 
         self.points = np.delete(self.points, indexes, axis=0)
         self.weights = np.delete(self.weights, indexes, axis=0)
