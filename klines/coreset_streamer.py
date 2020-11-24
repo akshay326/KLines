@@ -10,7 +10,6 @@
 from __future__ import division
 
 import copy
-import csv
 import time
 
 import numpy as np
@@ -76,11 +75,14 @@ class CoresetStreamer:
             Q.remove_lines_at_indexes(starting_index, starting_index+batch_size)
             self.add_to_tree(current_batch)
             number_of_lines_read_so_far += batch_size
+
+        # merge all nodes until single left
         while len(self.stack) > 1:
             node1 = self.stack.pop()
             node2 = self.stack.pop()
             new_node = self.merge_two_nodes(node1, node2)
             self.stack.append(new_node)
+            
         C = self.stack[0].lines
         coreset_ending_time = time.time()
         print("coreset sum of weights: ", np.sum(C.weights))
@@ -91,10 +93,14 @@ class CoresetStreamer:
     ######################################################################
 
     def add_to_tree(self, L):
+        """
+            L is the current batch of lines
+        """
         L_size = L.get_size()
+
+        # compress only if batch size > samples
         if L_size > self.sample_size:
             coreset = CorsetForKMeansForLines(self.parameters_config).coreset(L=L, k=self.k, m=self.sample_size)
-            x = np.sum(coreset.weights)
             current_node = CoresetNode(coreset)
         else:
             current_node = CoresetNode(L)
@@ -110,10 +116,7 @@ class CoresetStreamer:
         else:
             while stack_top_node.rank == current_node.rank: #TODO: take care for the case they are not equal, currently the node deosn't appanded to the tree
                 self.stack.pop()
-                current_node_sum_of_weights = np.sum(current_node.lines.weights)
-                top_node_sum_of_weights = np.sum(stack_top_node.lines.weights)
                 current_node = self.merge_two_nodes(current_node, stack_top_node)
-                current_node_sum_of_weights = np.sum(current_node.lines.weights)
                 if len(self.stack) == 0:
                     self.stack.append(current_node)
                     return
@@ -131,18 +134,7 @@ class CoresetStreamer:
         :param stack_top_node: CoresetNode
         """
         L1 = node1.lines
-        L1_sum_of_weights = np.sum(L1.weights)
         L2 = node2.lines
-        L2_sum_of_weights = np.sum(L2.weights)
         L1.add_set_of_lines(L2)
         coreset = CorsetForKMeansForLines(self.parameters_config).coreset(L=L1, k=self.k, m=self.sample_size)
-        coreset_sum_of_weights = np.sum(coreset.weights)
         return CoresetNode(coreset, node1.rank+1)
-
-    ######################################################################
-
-    def create_synthetic_points(file_name, points):
-        with open(file_name, "w") as csv_file:
-            writer = csv.writer(csv_file, delimiter=',')
-            for point in points:
-                writer.writerow(point)
