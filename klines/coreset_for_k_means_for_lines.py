@@ -63,7 +63,7 @@ class CorsetForKMeansForLines:
 
     ######################################################################
 
-    def coreset(self, L, k, m):
+    def coreset(self, L, k, m, offline=False):
         """
         This is the main function - that gets a set of n lines, set of n corresponding weights, integer k for number of
         centers and an integer m for the output size, and returns m weighted lines which are (k-eps) coreset, as define
@@ -125,7 +125,11 @@ class CorsetForKMeansForLines:
         L_sum_of_weights = np.sum(L.weights)
         S_sum_of_weights = np.sum(S.weights)
         S.multiply_weights_by_value(L_sum_of_weights / S_sum_of_weights)
-        return S, B, cost_to_B
+        
+        if offline:
+            return S, B, cost_to_B
+        else:
+            return S
 
     ######################################################################
 

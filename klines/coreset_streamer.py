@@ -22,11 +22,9 @@ from klines.coreset_node import CoresetNode
 
 
 """
-Class that performs the full streaming operation. Each step read m points from a file, comprase it and add it to the
-coreset tree.
+Class that performs the full streaming operation. Each step read m points from set of lines `L`, compress it and add it to the coreset tree.
 Attributes:
     stack (list): A list that simulates the streaming comprassion tree operations
-    st (string): The path to the file
     m (int): size of chunk
     co (int): flag/number of points for read
     eps (float): error parameter
@@ -40,7 +38,6 @@ class CoresetStreamer:
 
         self.stack = []
         self.k = k
-        self.file_name = parameters_config.input_points_file_name
         self.sample_size = sample_size
         self.lines_number = lines_number #if points_number == -1 then it will read until EOF
         self.parameters_config = parameters_config
@@ -49,7 +46,7 @@ class CoresetStreamer:
 
     def stream(self, L, is_spark_test = False):
         """
-        The method start to get in a streaming points from the file st as required
+        The method start to get in a streaming points set of lines `L`
         TODO: complete parameteres
         """
         coreset_starting_time = time.time()
@@ -60,13 +57,8 @@ class CoresetStreamer:
         while True:
             if number_of_lines_read_so_far == self.lines_number:
                 break
-            #if number_of_lines_read_so_far % int(self.lines_number / 10) == 0:
-                #print("Lines read so far: ", number_of_lines_read_so_far)
-                #sum_of_weights = 0
-                #for t in range(len(self.stack)):
-                #    sum_of_weights += np.sum(self.stack[t].points.weights)
-                #print("Sum of weights so far: ", sum_of_weights)
-                #print(" ")
+            if number_of_lines_read_so_far % int(self.lines_number / 10) == 0:
+                print("Lines read so far: ", number_of_lines_read_so_far)
             Q_size = Q.get_size()
             if batch_size > Q_size:
                 self.add_to_tree(Q)
