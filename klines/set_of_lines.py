@@ -84,74 +84,10 @@ class SetOfLines:
 
     ##################################################################################
 
-    def get_all_intersection_points_optimized(self):
-        """
-        this method returns n(n-1) points, where each n-1 points in the n-1 points on each line that are closest to the
-        rest n-1 lines.
-
-        Args:
-            ~
-
-        Returns:
-            np.ndarray: all the "intersection" points
-        """
-        assert self.get_size() > 0, "set is empty"
-
-        spans = self.spans
-        displacements = self.displacements
-        dim = self.dim
-        size = self.get_size()
-
-        spans_repeat_each_point = np.repeat(spans, size,
-                                            axis=0)  # that is a repeat of the spans, each span[i] is being repeated size times
-        identity = np.identity(dim)
-        identity_repeat_rows_all = np.repeat(identity.reshape(1, -1), size, axis=0).reshape(-1, dim)
-        I_final = np.repeat(identity_repeat_rows_all, size, axis=0).reshape(size * dim,
-                                                                            size * dim)  # the final is an identity matrix that is duplicated in rows and cols in factor of size
-        G_G_T_all_permutations = np.outer(spans,
-                                          spans)  # this is a 2 dimensional matrix of blocks, where the (i,j)-th block is spans[i]*spans[j]^T
-        I_minus_G_G_T_all_permutations = I_final - G_G_T_all_permutations
-        I_minus_G_G_tag_blocks = self.blockshaped(I_minus_G_G_T_all_permutations, dim,
-                                                  dim)  # it will take the big matrix that is built from many clocks and returns a stack of blocks matrices
-        I_minus_G_G_T_s = I_minus_G_G_tag_blocks[0:len(
-            I_minus_G_G_tag_blocks):size + 1]  # this is a 1 dimensional matrix of blocks, where the i-th block is spans[i]*spans[i]^T
-        I_minus_G_G_T_s_concatenated = I_minus_G_G_T_s.reshape(1, -1).T.reshape(-1,
-                                                                                dim).T  # that is a 1 dimensional block matrix, where the i-th element is the matrix I-G_iG_i^T
-        I_minus_G_G_T_s_F = np.dot(spans, I_minus_G_G_T_s_concatenated)
-        I_minus_G_G_T_s_F = I_minus_G_G_T_s_F.reshape(-1, 1).reshape(-1,
-                                                                     dim)  # in this matrix, the i-th index is the dot product of spans[j] and the k-th (I-GG^T), for j=i/size and k=i%size
-        I_minus_G_G_T_s_F_inv = np.linalg.pinv(I_minus_G_G_T_s_F.reshape(size ** 2, dim,
-                                                                         1))  # this matrix dimension is $size^2 \times dim$, where the i-th element is the point on the line j=i/size that are closest to the line m=i%size. that means: I_minus_G_G_T_s_F_inv[1] = ((I-G_1G_1^T)F_1)^+, I_minus_G_G_T_s_F_inv[2] = ((I-G_1G_1^T)F_2)^+,...,I_minus_G_G_T_s_F_inv[i] = ((I-G_jG_j^T)F_m)^+,
-        I_minus_G_G_T_s_F_inv = I_minus_G_G_T_s_F_inv.reshape(size ** 2, dim)
-        displacements_repeat_each_point = np.repeat(displacements, size, axis=0).reshape(size ** 2, dim)
-        displacements_repeat_all = np.repeat(displacements.reshape(1, -1), size, axis=0).reshape(size ** 2, dim)
-        f_minus_g = displacements_repeat_all - displacements_repeat_each_point  # this is a matrix where the i-th element is the substraction of g_j-f_m, where j=i/size and m=i%size
-        I_minus_G_G_T_s_dot_f_minus_g = np.dot(f_minus_g, I_minus_G_G_T_s_concatenated)
-        I_minus_G_G_T_s_dot_f_minus_g = I_minus_G_G_T_s_dot_f_minus_g.reshape(-1, 1).reshape(size, -1,
-                                                                                             dim)  # this matrix contains more than it needs to contain. The i-th element is (I-G_iG_i^T)(f_k-g_l), and we do not need the cases where i!=l, that is why we take the right subset in the folowing two rows
-        inner_steps = np.arange(0, size ** 2, size + 1)
-        I_minus_G_G_T_s_dot_f_minus_g_s = I_minus_G_G_T_s_dot_f_minus_g[:, inner_steps]
-        I_minus_G_G_T_s_dot_f_minus_g_s = I_minus_G_G_T_s_dot_f_minus_g_s.reshape(-1,
-                                                                                  dim)  # this matrix is the right matrix, where the i-th element is (I-G_iG_i^T)(f_j-g_i)
-        final = np.multiply(I_minus_G_G_T_s_F_inv,
-                            I_minus_G_G_T_s_dot_f_minus_g_s)  # each row in this matrix is ((I-G_iG_i^T)F_j)^{+}(I-G_iG_i^T)(f_j-g_i)
-        final_x_stars = np.sum(final, axis=1)  # that yields the scalar the fits ti Fx-b in each line
-        F_x_s = np.multiply(spans_repeat_each_point.T, final_x_stars)
-        F_x_s_minus_b = F_x_s.T + displacements_repeat_each_point  # reconstruct points from all the x stars
-        indices = np.arange(0, len(F_x_s_minus_b), size + 1)
-        F_x_s_minus_b = np.delete(F_x_s_minus_b, indices,
-                                  axis=0)  # removing all the unnecessary "closest point on the i-th line in the set to the i-th line in the set"
-        return F_x_s_minus_b
-
-    ##################################################################################
-
+  
     def get_all_intersection_points(self):
         """
-        this method returns n(n-1) points, where each n-1 points in the n-1 points on each line that are closest to the
-        rest n-1 lines.
-
-        Args:
-            ~
+        returns n(n-1) points, where each n-1 points in the n-1 points on each line that are closest to the rest n-1 lines.
 
         Returns:
             np.ndarray: all the "intersection" points
@@ -162,7 +98,6 @@ class SetOfLines:
         displacements = self.displacements
         dim = self.dim
         size = self.get_size()
-
         t = range(size)
         indexes_repeat_all_but_one = np.array(
             [[x for i, x in enumerate(t) if i != j] for j, j in enumerate(t)]).reshape(-1)
@@ -214,151 +149,10 @@ class SetOfLines:
 
         return G2
 
-    ##################################################################################
-
-    def get_4_approx_points_ex_search(self, k):
-
-        """
-        This method returns k points that minimizes the sum of squared distances to the lines in the set, up to factor
-        of 4.
-
-        Args:
-            k (int) : the number of required centers.
-
-        Returns:
-            np.ndarray: a set of k points that minimizes the sum of squared distances to the lines in the set, up to
-            a constant factor.
-        """
-
-        assert k > 0, "k <= 0"
-        assert self.get_size() > 0, "set is empty"
-
-        dim = self.dim
-        size = self.get_size()
-        displacements = self.displacements
-        spans = self.spans
-        weights = self.weights
-
-        intersection_points_before_uniqe = self.get_all_intersection_points()
-        number_of_intersection_points = np.shape(intersection_points_before_uniqe.reshape(-1, dim))[0]
-        if number_of_intersection_points == 1 or number_of_intersection_points == 0:
-            intersection_points = intersection_points_before_uniqe
-        else:
-            intersection_points = np.unique(intersection_points_before_uniqe,
-                                            axis=0)  # that is n(n-1) points - the union of every n-1 points on each line in the set that are closest to the n-1 other lines
-        intersection_points_size = len(intersection_points)
-        all_indices = np.asarray(range(intersection_points_size)).reshape(1, -1)
-        all_indices_repeat = np.repeat(all_indices, k, axis=0)
-        after_mesh_grid = np.array(np.meshgrid(*all_indices_repeat)).T.reshape(-1, k)
-        all_k_combinations_of_all_incdices = np.unique(after_mesh_grid, axis=0).reshape(-1)
-        intersection_points_repeat_each_row = np.repeat(intersection_points, size, axis=0).reshape(-1,
-                                                                                                   dim)  # each one of the points is repeated for size times, in order to calculate the distance from each point to the n lines
-        displacements_repeat_all = np.repeat(displacements.reshape(1, -1), intersection_points_size, axis=0).reshape(-1,
-                                                                                                                     dim)  # each displacement repeated for intersection_points_size_size times to match the number of points
-        spans_repeat_all = np.repeat(spans.reshape(1, -1), intersection_points_size, axis=0).reshape(-1,
-                                                                                                     dim)  # the same for the spans
-        intersection_points_repeat_each_row_minus_displacements_repeat_all = intersection_points_repeat_each_row - displacements_repeat_all  # first part of distance function between points and lines
-        intersection_points_size_minus_displacements_squared_norms = np.sum(
-            np.multiply(intersection_points_repeat_each_row_minus_displacements_repeat_all,
-                        intersection_points_repeat_each_row_minus_displacements_repeat_all), axis=1)
-        np.sum(np.multiply(intersection_points_repeat_each_row_minus_displacements_repeat_all, spans_repeat_all) ** 2,
-               axis=1)
-        intersection_points_minus_displacements_dot_spans = np.multiply(
-            intersection_points_repeat_each_row_minus_displacements_repeat_all, spans_repeat_all) ** 2
-        intersection_points_minus_displacements_dot_spans_squared_norms = np.sum(
-            intersection_points_minus_displacements_dot_spans, axis=1)
-        all_unweighted_distances = intersection_points_size_minus_displacements_squared_norms - intersection_points_minus_displacements_dot_spans_squared_norms  # last part of distance calculatoin between points and lines
-        weights_repeat_all = np.repeat(weights.reshape(-1, 1), intersection_points_size, axis=0)
-        all_weighted_distances = np.multiply(all_unweighted_distances.reshape(-1, 1), weights_repeat_all.reshape(-1, 1))
-        all_distances = (all_weighted_distances).reshape(-1, size)
-        all_distances = all_distances.reshape(intersection_points_size,
-                                              size)  # the i,j-th element is the distance between the i-th point in intersection_points_size and the j-th line in the set
-        all_k_combinations_of_all_distances = all_distances[
-            all_k_combinations_of_all_incdices]  # this is an array of size_of_intersection_points_size*size elements, where the i,j-element is the distance between the i-th point in intersection_points_size to the j-th line in the set
-        all_k_combinations_of_all_distances_reshaped = all_k_combinations_of_all_distances.reshape(-1, k,
-                                                                                                   size)  # reshaped for later calculation
-        distances_for_each_combination_of_k_points = np.min(all_k_combinations_of_all_distances_reshaped[:, :],
-                                                            axis=1)  # the i,j-th item is the distance from the i-th k-tuple from all points to the i-th line in the set
-        sum_of_distances_from_k_tuples_to_lines = np.sum(distances_for_each_combination_of_k_points,
-                                                         axis=1)  # the i-th element in this array is the sum of squared distanes between the i-th point in all_k_combinations_of_intersection_points_size_repeat_each_row to the lines in the set
-        sum_of_distances_from_k_tuples_to_lines_min_index = np.argmin(sum_of_distances_from_k_tuples_to_lines)
-        all_k_combinations_of_all_incdices_reshaped = all_k_combinations_of_all_incdices.reshape(-1, k)
-        final_min_indices = all_k_combinations_of_all_incdices_reshaped[
-            sum_of_distances_from_k_tuples_to_lines_min_index]
-        P_4_approx = intersection_points[final_min_indices]
-        P_4_approx = np.unique(P_4_approx, axis=0)
-        P_4_approx = SetOfPoints(P_4_approx)
-        return P_4_approx
-
-    ##################################################################################
-
-    def get_4_approx_points(self, k):
-
-        """
-        This method returns k points that minimizes the sum of squared distances to the lines in the set, up to factor
-        of 4.
-
-        Args:
-            k (int) : the number of required centers.
-
-        Returns:
-            np.ndarray: a set of k points that minimizes the sum of squared distances to the lines in the set, up to
-            a constant factor.
-        """
-
-        assert k > 0, "k <= 0"
-        assert self.get_size() > 0, "set is empty"
-
-        dim = self.dim
-        size = self.get_size()
-        displacements = self.displacements
-        spans = self.spans
-        weights = self.weights
-
-        intersection_points_before_uniqe = self.get_all_intersection_points()
-        intersection_points = np.unique(intersection_points_before_uniqe,
-                                        axis=0)  # that is n(n-1) points - the union of every n-1 points on each line in the set that are closest to the n-1 other lines
-        number_of_intersection_points = np.shape(intersection_points.reshape(-1, dim))[0]
-        if number_of_intersection_points <= k:
-            P_4_approx = intersection_points_before_uniqe
-        else:
-            all_indices = np.asarray(range(len(intersection_points)))
-            indices_sample = np.random.choice(all_indices, k, False)
-            P_4_approx = intersection_points[indices_sample]
-        if len(P_4_approx) == 0:
-            x = 2
-        P_4_approx = SetOfPoints(P_4_approx)
-        if P_4_approx.indexes == []:
-            x = 2
-        return P_4_approx
-
-    ###################################################################################
-
+  
     def get_size(self):
-        """
-        Args:
-            ~
-
-        Returns:
-            int: number of lines in the set
-        """
-
         return np.shape(self.spans)[0]
 
-    ##################################################################################
-
-    def get_size(self):
-        """
-        Args:
-            ~
-
-        Returns:
-            int: number of lines in the set
-        """
-
-        return np.shape(self.spans)[0]
-
-    ##################################################################################
 
     def get_sample_of_lines(self, size_of_sample):
         """
@@ -568,55 +362,7 @@ class SetOfLines:
             x = 2
         return sum_of_squared_distances
 
-    ##################################################################################
-
-    def get_closest_lines_to_centers(self, centers, m, type):
-        """
-        Args:
-            centers (npndarray) : d-dimensional points centers
-            m (int): size of sample - may be percent or fixed number, depends on the parameter 'type'
-            type (str): available values: "by number"/"by rate"
-        Returns:
-            SetOfLines: the lines that are closest to the given centers, by rate or by fixed number
-        """
-
-        assert type == "by number" or type == "by rate", "type undefined"
-        if type == "by number":
-            assert m <= self.get_size(), "(1) Number of lines in query is larger than number of lines in the set"
-        if type == "by rate":
-            assert m >= 0 and m <= 1, "(2) the rate invalid"
-
-        self_spans = self.spans
-        self_displacements = self.displacements
-        self_weights = self.weights
-
-        cluster_indices = self.get_indices_clusters(centers)
-        centers_by_cluster_indices = centers.get_points_from_indices(
-            cluster_indices)  # that is an array of size points, where the i-th element is the centers[cluster_indices[i]]
-
-        centeres_clustered_points = centers_by_cluster_indices.points
-        centeres_clustered_weights = centers_by_cluster_indices.weights
-
-        centers_by_cluster_indices_minus_displacements = centeres_clustered_points - self_displacements
-        centers_by_cluster_indices_minus_displacements_squared_norms = np.sum(
-            np.multiply(centers_by_cluster_indices_minus_displacements, centers_by_cluster_indices_minus_displacements),
-            axis=1)
-        centers_mul_spans_squared_norms = np.sum(
-            np.multiply(centers_by_cluster_indices_minus_displacements, self_spans) ** 2, axis=1)
-        all_unweighted_distances = centers_by_cluster_indices_minus_displacements_squared_norms - centers_mul_spans_squared_norms
-        total_weights = np.multiply(centeres_clustered_weights.reshape(-1, 1), self_weights.reshape(-1, 1)).reshape(-1)
-        all_distances = np.multiply(all_unweighted_distances.reshape(-1, 1), total_weights.reshape(-1, 1)).reshape(-1)
-        if type == "by rate":
-            m = int(m * self.get_size())  # number of lines is m percents of size
-            all_distances_mth_index_in_the_mth_place = np.argpartition(all_distances, m)
-        first_m_smallest_distances_indices = all_distances_mth_index_in_the_mth_place[:m]
-        spans_subset = self.spans[first_m_smallest_distances_indices]
-        displacements_subset = self.displacements[first_m_smallest_distances_indices]
-        weights_subset = self.weights[first_m_smallest_distances_indices]
-        return SetOfLines(spans_subset, displacements_subset, weights_subset)
-
-    ##################################################################################
-
+  
     def get_farthest_lines_to_centers(self, centers, m, type):
         """
         Args:
@@ -690,32 +436,6 @@ class SetOfLines:
 
     ##################################################################################
 
-    def get_cost_to_projected_mean(self, centers):
-        """
-        This function gets a set of centers, project them on the lines, take the mean of the projected points, and returns
-        the sum of squared distances from this mean to the projected points
-        :param centers:
-        :return:
-        """
-
-        spans = self.spans
-        displacements = self.displacements
-        dim = self.dim
-
-        indices_cluster = self.get_indices_clusters(centers)
-        centers_at_indices_cluster = centers[indices_cluster]
-        centers_minus_displacements = centers_at_indices_cluster - displacements
-        centers_minus_displacements_dot_spans = np.multiply(centers_minus_displacements, spans)
-        projected_points = centers_minus_displacements_dot_spans + displacements
-        missing_entries_indices = np.argmax(spans, axis=1)
-        original_points = copy.deepcopy(displacements)
-        original_points[:, missing_entries_indices] = projected_points[:, missing_entries_indices]
-        the_mean = np.mean(projected_points, axis=0)
-        cost = self.get_sum_of_distances_to_centers(the_mean.reshape(-1, dim))
-        return cost
-
-    ##################################################################################
-
     def add_set_of_lines(self, other):
         """
         TODO: complete
@@ -730,7 +450,6 @@ class SetOfLines:
             self.displacements = copy.deepcopy(other.displacements)
             return
         self.spans = np.concatenate((self.spans, other.spans))
-        # self.weights = np.concatenate((self.weights, other.weights))
         self.weights = np.concatenate((self.weights.reshape(-1, 1), other.weights.reshape(-1, 1)))
         self.displacements = np.concatenate((self.displacements, other.displacements))
 

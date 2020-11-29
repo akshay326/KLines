@@ -4,9 +4,6 @@
 #     Implemented by Yair Marom. yairmrm@gmail.com              #
 #################################################################
 
-
-
-
 from __future__ import division
 
 import copy
@@ -15,10 +12,16 @@ import time
 import numpy as np
 
 from klines.coreset_for_k_means_for_lines import CorsetForKMeansForLines
-from klines.coreset_node import CoresetNode
+from klines.set_of_lines import SetOfLines
 
 #from parameters_config import ParameterConfig
 #from fancyimpute import BiScaler, KNN, NuclearNormMinimization, SoftImpute
+
+
+class TreeNode:
+    def __init__(self, L = SetOfLines(), rank = 1):
+        self.rank = rank
+        self.lines = L
 
 
 """
@@ -34,12 +37,11 @@ Attributes:
 
 class CoresetStreamer:
 
-    def __init__(self, sample_size, lines_number, k, parameters_config):
+    def __init__(self, sample_size, k, parameters_config):
 
         self.stack = []
         self.k = k
         self.sample_size = sample_size
-        self.lines_number = lines_number #if points_number == -1 then it will read until EOF
         self.parameters_config = parameters_config
 
     ######################################################################
@@ -55,10 +57,8 @@ class CoresetStreamer:
         number_of_lines_read_so_far = 0
         Q = copy.deepcopy(L)
         while True:
-            if number_of_lines_read_so_far == self.lines_number:
-                break
-            if number_of_lines_read_so_far % int(self.lines_number / 10) == 0:
-                print("Lines read so far: ", number_of_lines_read_so_far)
+#             if number_of_lines_read_so_far % 100 == 0:
+#                 print(f"Lines read so far: {number_of_lines_read_so_far}")
             Q_size = Q.get_size()
             if batch_size > Q_size:
                 self.add_to_tree(Q)
@@ -93,10 +93,10 @@ class CoresetStreamer:
         # compress only if batch size > samples
         if L_size > self.sample_size:
             coreset = CorsetForKMeansForLines(self.parameters_config).coreset(L=L, k=self.k, m=self.sample_size)
-            current_node = CoresetNode(coreset)
+            current_node = TreeNode(coreset)
         else:
-            current_node = CoresetNode(L)
-
+            current_node = TreeNode(L)
+            
         if len(self.stack) == 0:
             self.stack.append(current_node)
             return
@@ -121,12 +121,10 @@ class CoresetStreamer:
 
     def merge_two_nodes(self, node1, node2):
         """
-        The method gets two nodes of the corset tree, merge them, and return the corset of the merged nodes
-        :param current_node: CoresetNode
-        :param stack_top_node: CoresetNode
+        Get nodes of the coreset tree, merge, and return the coreset of the merged nodes
         """
         L1 = node1.lines
         L2 = node2.lines
         L1.add_set_of_lines(L2)
         coreset = CorsetForKMeansForLines(self.parameters_config).coreset(L=L1, k=self.k, m=self.sample_size)
-        return CoresetNode(coreset, node1.rank+1)
+        return TreeNode(coreset, node1.rank+1)

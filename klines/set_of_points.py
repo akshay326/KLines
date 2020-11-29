@@ -356,7 +356,7 @@ class SetOfPoints:
         if type == "by rate":
             m = int(m * self.get_size())  # number of points is m percents of n
         m_th_distance = np.partition(all_distances, m)[m]  # the m-th distance
-        distances_smaller_than_median_indices = list(np.where(all_distances <= m_th_distance))  # all the m smallest distances indices in self.points
+        distances_smaller_than_median_indices = tuple(np.where(all_distances <= m_th_distance))  # all the m smallest distances indices in self.points
         P_subset = self_points[distances_smaller_than_median_indices]
         w_subset = self_weights[distances_smaller_than_median_indices]
         indexes_subset = self.indexes[distances_smaller_than_median_indices]
