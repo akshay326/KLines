@@ -6,7 +6,6 @@
 
 from __future__ import division
 
-import copy
 import time
 
 import numpy as np
@@ -53,20 +52,17 @@ class CoresetStreamer:
         """
         coreset_starting_time = time.time()
         batch_size = self.sample_size*2
-        starting_index = 0
-        number_of_lines_read_so_far = 0
-        Q = copy.deepcopy(L)
+        curr_index = 0
+        N = L.get_size()
         while True:
-#             if number_of_lines_read_so_far % 100 == 0:
-#                 print(f"Lines read so far: {number_of_lines_read_so_far}")
-            Q_size = Q.get_size()
-            if batch_size > Q_size:
-                self.add_to_tree(Q)
+#             if curr_index % 100 == 0:
+#                 print(f"Lines read so far: {curr_index}")
+            if batch_size > N - curr_index:
+                self.add_to_tree(L.get_lines_at_indexes_interval(curr_index, N))
                 break
-            current_batch = Q.get_lines_at_indexes_interval(starting_index, starting_index + batch_size)
-            Q.remove_lines_at_indexes(starting_index, starting_index+batch_size)
+            current_batch = L.get_lines_at_indexes_interval(curr_index, curr_index + batch_size)
             self.add_to_tree(current_batch)
-            number_of_lines_read_so_far += batch_size
+            curr_index += batch_size
 
         # merge all nodes until single left
         while len(self.stack) > 1:
