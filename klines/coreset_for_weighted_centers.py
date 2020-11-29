@@ -34,15 +34,13 @@ class CoresetForWeightedCenters:
         Returns:
             [np.ndarray, SetOfPoints]: the recursive robust median of P and its closest points. See Alg. 1 in the paper;
         """
-
-        assert k > 0, "k is not a positive integer"
         assert recursive_median_closest_to_median_rate < 1 and recursive_median_closest_to_median_rate > 0, "closest_rate2 not in (0,1)"
         assert P.get_size() != 0, "Q size is zero"
 
         minimum_number_of_points_in_iteration = int(math.log(P.get_size())) #for stop condition
         Q = copy.deepcopy(P)
         q = []
-        for i in range(k):
+        for _ in range(k):
             size_of_sample = median_sample_size
             q = Q.get_sample_of_points(size_of_sample)
             Q = Q.get_closest_points_to_set_of_points(q, recursive_median_closest_to_median_rate, type="by rate") #the median closest points
@@ -52,7 +50,6 @@ class CoresetForWeightedCenters:
                 break
         return [q, Q]
 
-    ######################################################################
 
     def coreset(self, P, k, m):
         """
@@ -66,19 +63,14 @@ class CoresetForWeightedCenters:
         Returns:
             SetOfPoints: the coreset of P for k weighted centers. See Alg. 2 in the paper;
         """
-        median_sample_size = self.parameters_config.median_sample_size
-        closest_to_median_rate = self.parameters_config.closest_to_median_rate
-        assert k > 0, "k is not a positive integer"
-        assert m > 0, "m is not a positive integer"
         assert P.get_size() != 0, "Q size is zero"
-        #number_of_remains_multiply_factor = self.parameters_config.number_of_remains_multiply_factor
         max_sensitivity_multiply_factor = self.parameters_config.max_sensitivity_multiply_factor
         minimum_number_of_points_in_iteration = self.parameters_config.number_of_remains
         Q = copy.deepcopy(P)
         temp_set = SetOfPoints()
         max_sensitivity = -1
         while True:
-            [q_k, Q_k] = self.recursive_robust_median(Q, k, self.parameters_config.median_sample_size, self.parameters_config.closest_to_median_rate) #get the recursive median q_k and its closest points Q_k
+            [_, Q_k] = self.recursive_robust_median(Q, k, self.parameters_config.median_sample_size, self.parameters_config.closest_to_median_rate) #get the recursive median q_k and its closest points Q_k
             if Q_k.get_size() == 0:
                 break
             Q_k.set_sensitivities(k) # sets all the sensitivities in Q_k as described in line 5 in main alg.

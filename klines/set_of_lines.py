@@ -66,22 +66,6 @@ class SetOfLines:
             self.displacements = displacements
             self.weights = weights
             self.sensitivities = sen
-
-    def blockshaped(self, arr, nrows, ncols):
-        """
-        Return an array of shape (n, nrows, ncols) where
-        n * nrows * ncols = arr.size
-
-        If arr is a 2D array, the returned array should look like n subblocks with
-        each subblock preserving the "physical" layout of arr.
-        """
-        h, w = arr.shape
-        return (arr.reshape(h // nrows, nrows, -1, ncols)
-                .swapaxes(1, 2)
-                .reshape(-1, nrows, ncols))
-
-    ##################################################################################
-
   
     def get_all_intersection_points(self):
         """
@@ -205,34 +189,18 @@ class SetOfLines:
         centers_points = centers.points
         centers_weights = centers.weights
 
-        centers_points_repeat_each_row = np.repeat(centers_points, self_size, axis=0).reshape(-1,
-                             
-                                                                                              dim)  # this is a size*k-simensional vector, where the i-th element is center[j], where j=i/k
-        a = np.where(np.isnan(centers_points))
-        b = np.where(np.isnan(centers_points_repeat_each_row))
-        a_flag = b_flag = False
-        if np.sum(a) > 0:
-            a_flag = True
-        if np.sum(b) > 0:
-            b_flag = True
+        # this is a size*k-simensional vector, where the i-th element is center[j], where j=i/k
+        centers_points_repeat_each_row = np.repeat(centers_points, self_size, axis=0).reshape(-1, dim)  
 
-        displacements_repeat_all = np.repeat(self_displacements.reshape(1, -1), centers_size, axis=0).reshape(-1,
-                                                                                                              dim)  # repeating the displacement for the sum of squared distances calculation from each center for all the lines
-        spans_repeat_all = np.repeat(self_spans.reshape(1, -1), centers_size, axis=0).reshape(-1,
-                                                                                              dim)  # repeating the displacement for the sum of squared distances calculation from each center for all the lines
+        # repeating the displacement for the sum of squared distances calculation from each center for all the lines
+        displacements_repeat_all = np.repeat(self_displacements.reshape(1, -1), centers_size, axis=0).reshape(-1, dim)  
+        # repeating the displacement for the sum of squared distances calculation from each center for all the lines                                                                                                                                                                                                                        
+        spans_repeat_all = np.repeat(self_spans.reshape(1, -1), centers_size, axis=0).reshape(-1,dim)  
         centers_minus_displacements = centers_points_repeat_each_row - displacements_repeat_all
-        centers_minus_displacements_squared_norms = np.sum(
-            np.multiply(centers_minus_displacements, centers_minus_displacements), axis=1)
+        centers_minus_displacements_squared_norms = np.sum(np.multiply(centers_minus_displacements, centers_minus_displacements), axis=1)
         centers_minus_displacements_dot_spans = np.multiply(centers_minus_displacements, spans_repeat_all)
-        centers_minus_displacements_dot_spans_squared_norms = np.sum(
-            np.multiply(centers_minus_displacements_dot_spans, centers_minus_displacements_dot_spans), axis=1)
-        a = np.where(np.isnan(centers_minus_displacements_squared_norms))
-        b = np.where(np.isnan(centers_minus_displacements_dot_spans_squared_norms))
-        a_flag = b_flag = False
-        if np.sum(a) > 0:
-            a_flag = True
-        if np.sum(b) > 0:
-            b_flag = True
+        centers_minus_displacements_dot_spans_squared_norms = np.sum(np.multiply(centers_minus_displacements_dot_spans, centers_minus_displacements_dot_spans), axis=1)
+        
         all_unwighted_distances = centers_minus_displacements_squared_norms - centers_minus_displacements_dot_spans_squared_norms
         self_weights_repeat_all =         np.repeat(self_weights.reshape(-1, 1), centers_size, axis=0).reshape(-1, 1)
         centers_weights_repeat_each_row = np.repeat(centers_weights,             self_size,    axis=0).reshape(-1, 1)
@@ -240,54 +208,10 @@ class SetOfLines:
         all_weighted_distances = np.multiply(all_unwighted_distances.reshape(-1, 1), total_weights.reshape(-1, 1))
         all_distances = (all_weighted_distances).reshape(-1, self_size)
 
-        # sum_of_squared_distances_reshaped = sum_of_squared_distances.reshape(-1,size)
-        # sum_of_squared_distances_reshaped_mins = np.min(all_distances, axis=0) #this is a size-dimensional vector, where the i-th element contains the smallest distance from the i-th line to the given set of centers
-        cluster_indices = np.argmin(all_distances.T,
-                                    axis=1)  # the i-th element in this array contains the index of the cluster the i-th line was clusterd into.
-        if np.min(all_distances) < 0:
-            x = 2
+        cluster_indices = np.argmin(all_distances.T, axis=1)  # the i-th element in this array contains the index of the cluster the i-th line was clusterd into.
         return cluster_indices
 
-    ##################################################################################
-
-    def get_centers_for_given_clusters(self, current_indices_cluster):
-        """
-        This method gets a size-dimensional vector, where size is the number of lines in the set, contains numbers in
-        the range [0,k-1], that represent the cluster number that each line in the set was clustered into, and returns
-        k center, one for each lines cluster, that minimizes the sum of squared distances in the set.
-
-        Args:
-            current_indices_cluster (np.ndarray) : list of indices in the range [0,k-1].
-
-        Returns:
-            np.ndarray: a set k centers that ninimizes the sum of squared distances to every line in each center's cluster
-        """
-
-        size = len(current_indices_cluster)
-        assert size > 0, "set is empty"
-        assert size == len(
-            current_indices_cluster), "current_indices_cluster size is not the number of lines in the set"
-
-        displacements = self.displacements
-        dim = self.dim
-
-        k = np.max(current_indices_cluster) + 1
-        for i in range(k):
-            indices_clustered_to_i = np.asarray(np.where(current_indices_cluster == i))[
-                0]  # all the indices that contains i in current_indices_cluster
-            displacements_clustered_to_i = displacements[
-                indices_clustered_to_i]  # all the displacements in the i-th cluster
-            cluster_i_center = np.mean(displacements_clustered_to_i, axis=0).reshape(-1,
-                                                                                     dim)  # the center of cluster of lines, that minimizes the sum of squared distances to the lines in the cluster is the mean of the displacements in the cluster, under the assumption that each line is spanned by a unit vector and its displacements is the closest point in the line to the origin
-            if i == 0:
-                centers = cluster_i_center
-            else:
-                centers = np.concatenate((centers, cluster_i_center), axis=0).reshape(-1, dim)
-        centers = centers.reshape(-1, dim)
-        return centers
-
-    ##################################################################################
-
+  
     def get_sum_of_distances_to_centers(self, centers):
         """
         This method gets a cet of k points and return the sum of squared distances from these points to the lines in
@@ -435,12 +359,6 @@ class SetOfLines:
     ##################################################################################
 
     def add_set_of_lines(self, other):
-        """
-        TODO: complete
-        :param other:
-        :return:
-        """
-
         if self.get_size() == 0:
             self.dim = copy.deepcopy(other.dim)
             self.spans = copy.deepcopy(other.spans)
@@ -451,29 +369,6 @@ class SetOfLines:
         self.weights = np.concatenate((self.weights.reshape(-1, 1), other.weights.reshape(-1, 1)))
         self.displacements = np.concatenate((self.displacements, other.displacements))
 
-    ##################################################################################
-
-    def get_projected_centers(self, centers):
-        """
-        This function gets a set of k centers, project each one of the centers onto its closest line in the ser and
-        returns the n projected centers
-        :param centers:
-        :return:
-        """
-
-        spans = self.spans
-        displacements = self.displacements
-        dim = self.dim
-
-        indices_cluster = self.get_indices_clusters(centers)
-        centers_at_indices_cluster = centers.get_points_from_indices(indices_cluster)
-        centers_points_at_indices_cluster = centers_at_indices_cluster.points
-        centers_minus_displacements = centers_points_at_indices_cluster - displacements
-        centers_minus_displacements_dot_spans = np.multiply(centers_minus_displacements, spans)
-        projected_points = centers_minus_displacements_dot_spans + displacements
-        return projected_points
-
-    ##################################################################################
 
     def get_lines_at_indexes_interval(self, start, end):
         """
@@ -492,21 +387,6 @@ class SetOfLines:
         displacements_subset = self.displacements[indices]
         weights_subset = self.weights[indices]
         return SetOfLines(spans_subset, displacements_subset, weights_subset)
-
-    ##################################################################################
-
-    def remove_lines_at_indexes(self, start, end):
-        """
-        TODO: complete
-        :param start:
-        :param end:
-        :return:
-        """
-        indexes = np.arange(start, end)
-        self.spans = np.delete(self.spans, indexes, axis=0)
-        self.displacements = np.delete(self.displacements, indexes, axis=0)
-        self.weights = np.delete(self.weights, indexes, axis=0)
-        self.sensitivities = np.delete(self.sensitivities, indexes, axis=0)
 
 
     def get_sensitivities_first_argument_for_centers(self, B):
@@ -584,6 +464,3 @@ class SetOfLines:
 
     def multiply_weights_by_value(self, val):
         self.weights = self.weights * val
-
-
-
