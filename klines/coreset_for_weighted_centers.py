@@ -119,7 +119,6 @@ class CoresetForWeightedCenters:
         Returns:
             SetOfPoints: the coreset of P for k weighted centers. See Alg. 2 in the paper in the other paper
         """
-        median_sample_size = self.parameters_config.median_sample_size
         assert k > 0, "k is not a positive integer"
         assert m > 0, "m is not a positive integer"
         assert P.get_size() != 0, "Q size is zero"
@@ -129,12 +128,9 @@ class CoresetForWeightedCenters:
         Q = copy.deepcopy(P)
         temp_set = SetOfPoints()
         max_sensitivity = -1
-        flag1 = False
-        flag2 = False
         while True:
-            [q_k, Q_k] = self.recursive_robust_median(Q, k, self.parameters_config.median_sample_size, self.parameters_config.closest_to_median_rate) #get the recursive median q_k and its closest points Q_k
+            [_, Q_k] = self.recursive_robust_median(Q, k, self.parameters_config.median_sample_size, self.parameters_config.closest_to_median_rate) #get the recursive median q_k and its closest points Q_k
             if Q_k.get_size() == 0:
-                flag1 = True
                 continue
             Q_k.set_sensitivities(k) # sets all the sensitivities in Q_k as described in line 5 in main alg.
             current_sensitivity = Q_k.get_arbitrary_sensitivity()
@@ -145,15 +141,11 @@ class CoresetForWeightedCenters:
             size = Q.get_size()
             Q_k_weigted_size = Q_k.get_sum_of_weights()
             if size <= minimum_number_of_points_in_iteration or Q_k_weigted_size == 0: # stop conditions
-                flag2 = True
                 break
         if Q.get_size() > 0:
             Q.set_all_sensitivities(max_sensitivity * max_sensitivity_multiply_factor) # here we set the sensitivities of the points who left to the highest - since they are outliers with a very high probability
             temp_set.add_set_of_points(Q) #and now temp_set is all the points we began woth - just with updated sensitivities
-        if len(temp_set.sensitivities) != len(P.points):
-            x=2
         T = temp_set.get_sum_of_sensitivities()
         temp_set.set_weights(T, m) #sets the weights as described in line 10 in main alg
         temp_set.sort_by_indexes()
         return temp_set.sensitivities, temp_set.weights
-

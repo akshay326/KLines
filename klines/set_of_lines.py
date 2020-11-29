@@ -48,7 +48,6 @@ class SetOfLines:
                 self.displacements.append(displacement)
             self.spans = np.asarray(self.spans)
             self.displacements = np.asarray(self.displacements)
-            # self.normalized_lines_representation()
             self.normalize_spans()
             self.weights = np.ones(len(lines)).reshape(-1)
             self.sensitivities = np.ones(len(lines))
@@ -67,7 +66,6 @@ class SetOfLines:
             self.displacements = displacements
             self.weights = weights
             self.sensitivities = sen
-            # self.normalized_lines_representation()
 
     def blockshaped(self, arr, nrows, ncols):
         """
@@ -510,90 +508,6 @@ class SetOfLines:
         self.weights = np.delete(self.weights, indexes, axis=0)
         self.sensitivities = np.delete(self.sensitivities, indexes, axis=0)
 
-    ##################################################################################
-
-    def set_all_weights_to_specific_value(self, value):
-        """
-        TODO: complete
-        :param value:
-        :return:
-        """
-
-        new_weights = np.ones(self.get_size()) * value
-        self.weights = new_weights
-
-    ##################################################################################
-
-    def normalized_lines_representation(self):
-        """
-        This method gets a set of n lines represented by an array of n spanning vectors and an array od n displacements
-        vectors, and returns these spanning vectors normalized and change each displacements in each line to be the
-        closest point on the line to the origin. It is required in order to calculate all the distances later.
-        Args:
-            spans (np.ndarray) : an array of spanning vectors
-            displacements (np.ndarray) : an array of displacements vectors
-
-        Returns:
-            spans_normalized, displacements_closest_to_origin (np.ndarray, np,ndarray) : the spanning vectors and the
-                displacements vectors normalized and moved as required.
-        """
-        spans = self.spans
-        displacements = self.displacements
-
-        assert len(spans) > 0, "assert no spanning vectors"
-        assert len(displacements) > 0, "assert no displacements vectors"
-        assert len(spans) == len(displacements), "number of spanning vectors and displacements vectors not equal"
-
-        dim = np.shape(spans)[1]
-
-        spans_norms = np.sqrt(np.sum(spans ** 2, axis=1))
-        spans_norms_repeat = np.repeat(spans_norms, dim, axis=0).reshape(-1, dim)
-        spans_normalized = spans / spans_norms_repeat
-        for i in range(len(spans_normalized)):
-            for j in range(len(spans_normalized[i])):
-                if i == 87:
-                    x = 2
-                val = spans_normalized[i, j]
-                if math.isnan(val):
-                    spans_normalized[i, j] = 0
-
-        # print("spans_normalized: \n", spans_normalized)
-        # con = np.array([[]])
-        displacements_minus_one = displacements * -1
-        d = np.sum(np.multiply(displacements_minus_one, spans_normalized), axis=1)
-        d_repeat = np.repeat(d, dim, axis=0).reshape(-1, dim)
-        displacements_closest_to_origin = displacements + np.multiply(spans_normalized, d_repeat)
-        """
-        #displacements_mul_spans_normalized = np.multiply(displacements_minus_one, spans_normalized)
-        for i in range(len(displacements_minus_one)):
-            minus = (displacements_minus_one[i] - spans_normalized[i] * d [i]).reshape(-1, self.dim)
-            plus =  (displacements_minus_one[i] + spans_normalized[i] * d [i]).reshape(-1, self.dim)
-            minus_norm = np.sqrt(np.sum(minus ** 2, axis=1))
-            plus_norm = np.sqrt(np.sum(plus ** 2, axis=1))
-            if minus_norm < plus_norm:
-                if i == 0:
-                    con = minus.reshape(-1, self.dim)
-                    continue
-                con = np.append(con,minus,axis=0)
-            else:
-                if i == 0:
-                    con = plus.reshape(-1, self.dim)
-                    continue
-                con = np.append(con,plus,axis=0)
-        """
-        self.displacements = displacements_closest_to_origin
-        self.spans = spans_normalized
-        # displacements_mul_minus_1 = displacements * -1
-        # displacements_mul_minus_1_mul_spans_normalized = np.sum(np.multiply(displacements_mul_minus_1, spans_normalized), axis=1)
-        # displacements_mul_minus_1_mul_spans_normalized_repeat_each_col = np.repeat(
-        #    displacements_mul_minus_1_mul_spans_normalized, dim, axis=0).reshape(-1, dim)
-        # disp_mul_spans_normalized = np.multiply(spans_normalized,
-        #                                        displacements_mul_minus_1_mul_spans_normalized_repeat_each_col)
-        # displacements_closest_to_origin = disp_mul_spans_normalized + displacements
-
-        # print("displacements_closest_to_origin: \n", displacements_closest_to_origin)
-
-    ##################################################################################
 
     def get_sensitivities_first_argument_for_centers(self, B):
         """
@@ -661,17 +575,6 @@ class SetOfLines:
         sensitivities_first_argument = all_distances_min / cost_to_B
 
         return sensitivities_first_argument
-
-    def shuffle_lines(self):
-        """
-        This method shuffles the lines in the set
-        :return:
-        """
-
-        random_indexes = np.random.permutation(self.get_size())
-        self.spans = self.spans[random_indexes]
-        self.displacements = self.displacements[random_indexes]
-        self.weights = self.weights[random_indexes]
 
     def normalize_spans(self):
         spans_norm = np.sum(self.spans ** 2, axis=1) ** 0.5
