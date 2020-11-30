@@ -106,11 +106,6 @@ class SetOfPoints:
     ##################################################################################
 
     def get_size(self):
-        """
-        Returns:
-            int: number of points in the set
-        """
-
         return np.shape(self.points)[0]
 
     ##################################################################################
@@ -123,9 +118,8 @@ class SetOfPoints:
         Returns:
             SetOfPoints: a set of point that contains the points in the input indices
         """
-        assert len(self.get_size()) > 0, "no points to select"
+        assert self.get_size() > 0, "no points to select"
         assert len(indices) > 0, "indices length is zero"
-
 
         sample_points = self.points[indices]
         sample_weights = self.weights[indices]
@@ -135,13 +129,6 @@ class SetOfPoints:
 
 
     def get_sum_of_weights(self):
-        """
-        Returns:
-            float: the sum of wights in the set
-        """
-
-        assert self.get_size() > 0, "No points in the set"
-
         return np.sum(self.weights)
 
     ##################################################################################

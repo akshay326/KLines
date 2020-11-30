@@ -45,7 +45,7 @@ class CoresetStreamer:
 
     ######################################################################
 
-    def stream(self, L, is_spark_test = False):
+    def stream(self, L):
         """
         The method start to get in a streaming points set of lines `L`
         TODO: complete parameteres
@@ -54,7 +54,7 @@ class CoresetStreamer:
         batch_size = self.sample_size*2
         curr_index = 0
         N = L.get_size()
-        while True:
+        while curr_index < N:
 #             if curr_index % 100 == 0:
 #                 print(f"Lines read so far: {curr_index}")
             if batch_size > N - curr_index:
@@ -73,9 +73,6 @@ class CoresetStreamer:
             
         C = self.stack[0].lines
         coreset_ending_time = time.time()
-        print("coreset sum of weights: ", np.sum(C.weights))
-        if is_spark_test:
-            return coreset_starting_time, coreset_ending_time
         return C, coreset_starting_time, coreset_ending_time
 
     ######################################################################
