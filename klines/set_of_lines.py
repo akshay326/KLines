@@ -4,12 +4,8 @@
 #     Implemented by Yair Marom. yairmrm@gmail.com              #
 #################################################################
 import copy
-import math
 
 import numpy as np
-
-from klines.set_of_points import SetOfPoints
-
 
 class SetOfLines:
     """
@@ -81,17 +77,12 @@ class SetOfLines:
         dim = self.dim
         size = self.get_size()
         t = range(size)
-        indexes_repeat_all_but_one = np.array(
-            [[x for i, x in enumerate(t) if i != j] for j, j in enumerate(t)]).reshape(-1)
+        indexes_repeat_all_but_one = np.array([[x for i, x in enumerate(t) if i != j] for j, j in enumerate(t)]).reshape(-1)
 
-        spans_rep_each = spans[
-            indexes_repeat_all_but_one]  # repeat of the spans, each span[i] is being repeated size times in a sequance
-        spans_rep_all = np.repeat(spans.reshape(1, -1), size - 1, axis=0).reshape(-1,
-                                                                                  dim)  # repeat of the spans, all the spans block is repeated size-1 times
-        disp_rep_each = displacements[
-            indexes_repeat_all_but_one]  # repeat of the displacements, each span[i] is being repeated size times in a sequance
-        disp_rep_all = np.repeat(displacements.reshape(1, -1), size - 1, axis=0).reshape(-1,
-                                                                                         dim)  # repeat of the displacements, all the spans block is repeated size-1 times
+        spans_rep_each = spans[indexes_repeat_all_but_one]  # repeat of the spans, each span[i] is being repeated size times in a sequance
+        spans_rep_all = np.repeat(spans.reshape(1, -1), size - 1, axis=0).reshape(-1, dim)  # repeat of the spans, all the spans block is repeated size-1 times
+        disp_rep_each = displacements[indexes_repeat_all_but_one]  # repeat of the displacements, each span[i] is being repeated size times in a sequance
+        disp_rep_all = np.repeat(displacements.reshape(1, -1), size - 1, axis=0).reshape(-1, dim)  # repeat of the displacements, all the spans block is repeated size-1 times
 
         W0 = disp_rep_each - disp_rep_all
         a = np.sum(np.multiply(spans_rep_each, spans_rep_each), axis=1)
@@ -106,11 +97,7 @@ class SetOfLines:
         b_squared = np.multiply(b, b)
         ac_minus_b_squared = ac - b_squared
         s_c = be_minus_cd / ac_minus_b_squared
-        """
-        for i in range(len(s_c)):
-            if np.isnan(s_c[i]):
-                s_c[i] = 0
-        """
+        
         s_c_repeated = np.repeat(s_c.reshape(-1, 1), dim, axis=1)
         G = disp_rep_each + np.multiply(s_c_repeated, spans_rep_each)
 
@@ -119,16 +106,7 @@ class SetOfLines:
         G2 = np.delete(G, np.concatenate((b[0], c[0]), axis=0), axis=0).reshape(-1, dim)
 
         if len(G2) == 0:  # that means all the lines are parallel, take k random points from the displacements set
-            return displacements;
-
-        b2 = np.where(np.isnan(G2))
-        c2 = np.where(np.isinf(G2))
-        d2 = np.sum(b2)
-        e2 = np.sum(c2)
-        f2 = d2 + e2
-        if f2 > 0:
-            x = 2
-
+            return displacements
         return G2
 
   
@@ -256,33 +234,14 @@ class SetOfLines:
         unweighted_all_distances = centers_points_minus_displacements_norm_squared.reshape(-1,
                                                                                            1) - centers_points_minus_displacements_mul_spans_norm_squared.reshape(
             -1, 1)
-        # for i in range(len(unweighted_all_distances)):
-        #    if unweighted_all_distances[i] < 0:
-        #        unweighted_all_distances[i] = 0
+
         total_weights = np.multiply(centers_weights_repeat_each_row.reshape(-1, 1),
                                     self_weights_repeat_all.reshape(-1, 1))
         all_weighted_distances = np.multiply(unweighted_all_distances.reshape(-1, 1), total_weights.reshape(-1, 1))
         all_distances = (all_weighted_distances).reshape(-1, self_size)
-        """
-        min_unweighted_all_distances = np.min(unweighted_all_distances)
-        min_centers_weights_repeat_each_row = np.min(centers_weights_repeat_each_row)
-        min_self_weights_repeat_all = np.min(self_weights_repeat_all)
-        min_all_weighted_distances = np.min(all_weighted_distances)
-        min_all_distances = np.min(all_distances)
-        #plt.plot(unweighted_all_distances)
-        j = 0
-        for i in range(len(unweighted_all_distances)):
-            if unweighted_all_distances[i] < 0:
-                j+=1
-        print(np.max(np.sort(unweighted_all_distances)))
-        print(np.min(np.sort(unweighted_all_distances)))
-        #plt.show()
-        """
+
         all_distances_min = np.min(all_distances, axis=0)
-        sum_of_squared_distances = np.sum(all_distances_min)
-        if sum_of_squared_distances <= 0:
-            x = 2
-        return sum_of_squared_distances
+        return np.sum(all_distances_min)
 
   
     def get_farthest_lines_to_centers(self, centers, m, type):
@@ -422,18 +381,15 @@ class SetOfLines:
         centers_points_minus_displacements_norm_squared = np.sum(
             centers_points_repeat_each_row_minus_displacements_repeat_all ** 2, axis=1)
         try:
-            the_flag = False
             centers_points_minus_displacements_mul_spans_norm_squared = np.sum(
                 np.multiply(centers_points_repeat_each_row_minus_displacements_repeat_all, self_spans_repeat_all) ** 2,
                 axis=1)
         except:
-            the_flag = True
             self_spans_repeat_all_nan_indexes = np.where(np.isnan(self_spans_repeat_all))
             self_spans_repeat_all[self_spans_repeat_all_nan_indexes] = np.inf
             centers_points_minus_displacements_mul_spans_norm_squared = np.sum(
                 np.multiply(centers_points_repeat_each_row_minus_displacements_repeat_all, self_spans_repeat_all) ** 2,
                 axis=1)
-            x = 2
         unweighted_all_distances = centers_points_minus_displacements_norm_squared - centers_points_minus_displacements_mul_spans_norm_squared
         less_than_zero_indexes = np.where(unweighted_all_distances < 0)
         is_nan_indexes = np.where(np.isnan(unweighted_all_distances))
@@ -443,10 +399,7 @@ class SetOfLines:
         is_inf_indexes_sum = np.sum(is_inf_indexes)
         if less_than_zero_sum + is_nan_indexes_sum + is_inf_indexes_sum > 0:
             print("less_than_zero_sum: ", less_than_zero_sum)
-            x = 2
-        # for i in range(len(unweighted_all_distances)):
-        #    if unweighted_all_distances[i] < 0:
-        #        unweighted_all_distances[i] = 0
+
         total_weights = np.multiply(centers_weights_repeat_each_row.reshape(-1, 1),
                                     self_weights_repeat_all.reshape(-1, 1))
         all_weighted_distances = np.multiply(unweighted_all_distances.reshape(-1, 1), total_weights.reshape(-1, 1))
@@ -464,3 +417,23 @@ class SetOfLines:
 
     def multiply_weights_by_value(self, val):
         self.weights = self.weights * val
+
+    def get_projected_centers(self, centers):
+        """
+        This function gets a set of k centers, project each one of the centers onto its closest line in the ser and
+        returns the n projected centers
+        :param centers:
+        :return:
+        """
+
+        spans = self.spans
+        displacements = self.displacements
+        dim = self.dim
+
+        indices_cluster = self.get_indices_clusters(centers)
+        centers_at_indices_cluster = centers.get_points_from_indices(indices_cluster)
+        centers_points_at_indices_cluster = centers_at_indices_cluster.points
+        centers_minus_displacements = centers_points_at_indices_cluster - displacements
+        centers_minus_displacements_dot_spans = np.multiply(centers_minus_displacements, spans)
+        projected_points = centers_minus_displacements_dot_spans + displacements
+        return projected_points
