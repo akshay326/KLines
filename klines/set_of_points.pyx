@@ -1,17 +1,9 @@
-#################################################################
-#     Corset for Weighted centers of points                     #
-#     Paper: http://people.csail.mit.edu/dannyf/outliers.pdf    #
-#     Implemented by Yair Marom. yairmrm@gmail.com              #
-#################################################################
-
-
-
 from __future__ import division
 
 import random
 
 import numpy as np
-
+cimport numpy as np
 
 class SetOfPoints:
     """
