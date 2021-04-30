@@ -1,9 +1,16 @@
+#cython: language_level=3
 from __future__ import division
-
 import random
 
 import numpy as np
+np.seterr(divide='ignore', invalid='ignore')
+
 cimport numpy as np
+cimport cython
+
+DTYPE = np.float
+ctypedef np.float_t DTYPE_t
+
 
 class SetOfPoints:
     """
@@ -14,63 +21,54 @@ class SetOfPoints:
         dim (integer): The dimension of the points
     """
 
-    ##################################################################################
 
-    def __init__(self, P=None, w=None, sen=None, indexes = None):
+    def __init__(self, 
+        np.ndarray P = np.empty(0),
+        np.ndarray w = np.empty(0), 
+        np.ndarray sen = np.empty(0), 
+        np.ndarray indexes = np.empty(0)):
         """
-        C'tor
-        :param P: np.ndarray - set of points
-        :param w: np.ndarray - set of weights
-        :param sen: np.ndarray - set of sensitivities
+            constructor
+            :param P: np.ndarray - set of points
+            :param w: np.ndarray - set of weights
+            :param sen: np.ndarray - set of sensitivities
         """
-        #if (indexes != [] and len(P) == 0) or (indexes == [] and len(P) != 0):
-        #    assert indexes != [] and len(P) != 0, "not indexes == [] and len(P) == 0"
-
-        if P is None:
-            P = []
-        if w is None:
-            w = []
-        if sen is None:
-            sen = []
-        if indexes is None:
-            indexes = []
 
         size = len(P)
         if size == 0:  # there is no points in the set we got
-            self.points = []
-            self.weights = []
-            self.sensitivities = []
+            self.points = np.empty(0)
+            self.weights = np.empty(0)
+            self.sensitivities = np.empty(0)
             self.dim = 0
-            self.indexes = []
+            self.indexes = np.empty(0)
             return
         if np.ndim(P) == 1:  # there is only one point in the array
             Q = []
             Q.append(P)
             self.points = np.asarray(Q)
-            if w == []:
-                w = np.ones((1, 1), dtype=np.float)
-            if sen == []:
-                sen = np.ones((1, 1), dtype=np.float)
+            if w.size == 0:
+                w = np.ones((1, 1), dtype=DTYPE)
+            if sen.size == 0:
+                sen = np.ones((1, 1), dtype=DTYPE)
             self.weights = w
             self.sensitivities = sen
             [_, self.dim] = np.shape(self.points)
-            self.indexes = np.zeros((1, 1), dtype=np.float)
+            self.indexes = np.zeros((1, 1), dtype=DTYPE)
             return
         else:
             self.points = np.asarray(P)
         [_, self.dim] = np.shape(self.points)
-        if w == []:
-            w = np.ones((size, 1), dtype=np.float)
-        if sen == []:
-            sen = np.ones((size, 1), dtype=np.float)
+        if w.size == 0:
+            w = np.ones((size, 1), dtype=DTYPE)
+        if sen.size == 0:
+            sen = np.ones((size, 1), dtype=DTYPE)
         self.weights = w
         self.sensitivities = sen
-        if indexes == []:
+        if indexes.size == 0:
             self.indexes = np.asarray(range(len(self.points))).reshape(-1)
         else:
             self.indexes = indexes.reshape(-1)
 
-    ##################################################################################
 
     def get_sample_of_points(self, size_of_sample):
         """
@@ -94,12 +92,10 @@ class SetOfPoints:
             sample_indexes = np.take(self.indexes, sample_indices, axis=0, out=None, mode='raise')
             return SetOfPoints(sample_points, sample_weights,indexes=sample_indexes)
 
-    ##################################################################################
 
     def get_size(self):
         return np.shape(self.points)[0]
 
-    ##################################################################################
 
     def get_points_from_indices(self, indices):
         """
@@ -122,7 +118,6 @@ class SetOfPoints:
     def get_sum_of_weights(self):
         return np.sum(self.weights)
 
-    ##################################################################################
 
     def add_set_of_points(self, P):
         """
@@ -184,7 +179,9 @@ class SetOfPoints:
         return sum(self.sensitivities)
 
 
-    def     get_closest_points_to_set_of_points(self, P, m, type):
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def get_closest_points_to_set_of_points(self, P, m, type):
         """
         Args:
             P (SetOfPoints) : a set of points
@@ -243,10 +240,10 @@ class SetOfPoints:
         assert sensitivity > 0, "sensitivity is not positive"
         assert self.get_size() > 0, "set is empty"
 
-        new_sensitivities = np.ones((self.get_size(), 1), dtype=np.float) * sensitivity
+        new_sensitivities = np.ones((self.get_size(), 1), dtype=DTYPE) * sensitivity
         self.sensitivities = new_sensitivities
 
-    ######################################################################
+
 
     def set_weights(self, T, m):
         """
@@ -261,13 +258,13 @@ class SetOfPoints:
 
         assert self.get_size() > 0, "set is empty"
 
-        numerator = self.weights.reshape(-1,1) * T #np.ones((self.get_size(), 1), dtype=np.float) * T
+        numerator = self.weights.reshape(-1,1) * T #np.ones((self.get_size(), 1), dtype=DTYPE) * T
         denominator = self.sensitivities * m
         new_weights = numerator / denominator
 
         self.weights = new_weights
 
-    #######################################################################
+#
 
     def get_probabilites(self):
         """
@@ -281,7 +278,7 @@ class SetOfPoints:
         probs = self.sensitivities / T
         return probs
 
-    #########################################################################
+###
 
     def set_sensitivities(self, k):
         """
@@ -296,10 +293,10 @@ class SetOfPoints:
         assert self.get_size() > 0, "set is empty"
 
         size = self.get_size()
-        new_sensitivities = np.ones((self.get_size(), 1), dtype=np.float) * ((1*k)/size)
+        new_sensitivities = np.ones((self.get_size(), 1), dtype=DTYPE) * ((1*k)/size)
         self.sensitivities = new_sensitivities
 
-    #########################################################################
+###
 
     def get_arbitrary_sensitivity(self):
         """

@@ -1,11 +1,10 @@
 import numpy as np
-from sklearn.datasets import load_digits, load_iris
+from sklearn.datasets import load_iris
 from sklearn.cluster import KMeans
 from sklearn import metrics
 import unittest
-import copy
 import math
-from klines import SetOfLines, SetOfPoints, CoresetForWeightedCenters, CorsetForKMeansForLines, CoresetStreamer
+from klines import SetOfLines, CoresetForWeightedCenters, CorsetForKMeansForLines
 
 
 class TestKMeansIris(unittest.TestCase):
@@ -135,7 +134,7 @@ class TestKMeansIris(unittest.TestCase):
             klines_mse.append(((X - X_klines)**2).mean())
             scores.append(metrics.homogeneity_completeness_v_measure(kl_labels, y))
 
-        assert klines_mse_sklearn/np.array(klines_mse).mean() < 0.5
+        assert klines_mse_sklearn/np.array(klines_mse).mean() < 0.6
 
 if __name__ == '__main__':
     unittest.main()

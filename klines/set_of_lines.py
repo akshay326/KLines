@@ -1,11 +1,7 @@
-#################################################################
-#     Corset for k means for lines                              #
-#     Paper: TBD                                                #
-#     Implemented by Yair Marom. yairmrm@gmail.com              #
-#################################################################
 import copy
 
 import numpy as np
+np.seterr(divide='ignore', invalid='ignore')
 
 class SetOfLines:
     """
@@ -16,7 +12,6 @@ class SetOfLines:
         dim (integer): The space's dimension
     """
 
-    ##################################################################################
 
     def __init__(self, spans=None, displacements=None, weights=None, sen=None, lines=None, is_points=False):
 
@@ -63,6 +58,7 @@ class SetOfLines:
             self.weights = weights
             self.sensitivities = sen
   
+
     def get_all_intersection_points(self):
         """
         returns n(n-1) points, where each n-1 points in the n-1 points on each line that are closest to the rest n-1 lines.
@@ -140,7 +136,6 @@ class SetOfLines:
                 x = 2
         return SetOfLines(sample_spans, sample_displacements, sample_weights)
 
-    ##################################################################################
 
     def get_indices_clusters(self, centers):
         """
@@ -294,7 +289,6 @@ class SetOfLines:
         weights_subset = self.weights[first_m_smallest_distances_indices]
         return SetOfLines(spans_subset, displacements_subset, weights_subset)
 
-    ##################################################################################
 
     def get_lines_at_indices(self, indices):
         """
@@ -315,7 +309,6 @@ class SetOfLines:
         L = SetOfLines(new_spans, new_displacements, new_weights)
         return L
 
-    ##################################################################################
 
     def add_set_of_lines(self, other):
         if self.get_size() == 0:

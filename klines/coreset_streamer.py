@@ -1,20 +1,8 @@
-#################################################################
-#     Corset for Weighted centers of points                     #
-#     Paper: http://people.csail.mit.edu/dannyf/outliers.pdf    #
-#     Implemented by Yair Marom. yairmrm@gmail.com              #
-#################################################################
 
 from __future__ import division
-
 import time
-
-import numpy as np
-
 from klines.coreset_for_k_means_for_lines import CorsetForKMeansForLines
 from klines.set_of_lines import SetOfLines
-
-#from parameters_config import ParameterConfig
-#from fancyimpute import BiScaler, KNN, NuclearNormMinimization, SoftImpute
 
 
 class TreeNode:
@@ -43,12 +31,10 @@ class CoresetStreamer:
         self.sample_size = sample_size
         self.parameters_config = parameters_config
 
-    ######################################################################
 
     def stream(self, L):
         """
-        The method start to get in a streaming points set of lines `L`
-        TODO: complete parameteres
+            The method start to get in a streaming points set of lines L
         """
         coreset_starting_time = time.time()
         batch_size = self.sample_size*2
@@ -75,7 +61,6 @@ class CoresetStreamer:
         coreset_ending_time = time.time()
         return C, coreset_starting_time, coreset_ending_time
 
-    ######################################################################
 
     def add_to_tree(self, L):
         """
@@ -110,7 +95,6 @@ class CoresetStreamer:
                     self.stack.append(current_node)
                     return
 
-    ######################################################################
 
     def merge_two_nodes(self, node1, node2):
         """

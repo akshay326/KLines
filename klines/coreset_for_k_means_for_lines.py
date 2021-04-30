@@ -1,14 +1,7 @@
-#################################################################
-#     Corset for k means for lines                              #
-#     Paper: TBD                                                #
-#     Implemented by Yair Marom. yairmrm@gmail.com              #
-#################################################################
-
 from __future__ import division
 import copy
 import numpy as np
 from klines.coreset_for_weighted_centers import CoresetForWeightedCenters
-from klines.set_of_lines import SetOfLines
 from klines.set_of_points import SetOfPoints
 
 
@@ -20,7 +13,7 @@ class CorsetForKMeansForLines:
     def __init__(self, parameters_config):
         self.parameters_config = parameters_config
 
-    ######################################################################
+
 
     def alpha_beta_approximation(self, L, k, sample_size):
         """
@@ -61,7 +54,7 @@ class CorsetForKMeansForLines:
 
         return B
 
-    ######################################################################
+
 
     def coreset(self, L, k, m, offline=False):
         """
@@ -88,7 +81,6 @@ class CorsetForKMeansForLines:
         sample_size_for_a_b_approx = self.parameters_config.sample_size_for_a_b_approx
         B = self.alpha_beta_approximation(L=L, k=k,sample_size=sample_size_for_a_b_approx)
         cost_to_B = L.get_sum_of_distances_to_centers(B)
-        #L.plot_lines(a_b_approx_centers)
 
         sensitivities_first_argument = L.get_sensitivities_first_argument_for_centers(B)
         sensitivity_first_argument_sum = np.sum(sensitivities_first_argument)
@@ -101,7 +93,7 @@ class CorsetForKMeansForLines:
         Q.displacements = B_clustered_points
         points_from_intersaction_of_lines_and_spheres = Q.displacements + Q.spans
         corset_for_weighted_centers = CoresetForWeightedCenters(self.parameters_config)
-        sensitivity_second_argument, weights_second_argument = corset_for_weighted_centers.coreset_return_sensitivities(P=SetOfPoints(points_from_intersaction_of_lines_and_spheres,Q.weights),k=2*k, m=m)
+        sensitivity_second_argument, _ = corset_for_weighted_centers.coreset_return_sensitivities(P=SetOfPoints(points_from_intersaction_of_lines_and_spheres,Q.weights),k=2*k, m=m)
 
         sensitivity_second_argument_sum = np.sum(sensitivity_second_argument) #the second argument of the sensitivity is the sensitivity of the projected lines - each line in L was projected to its closest center in a_b_approx_centers, and their sensitivity is the sensitivity of the intersection points with the unitspheres that are centers in each on of the a_b_approx_centers, as defined in paper
         sensitivity_second_argument_normalized = sensitivity_second_argument / sensitivity_second_argument_sum
@@ -120,7 +112,6 @@ class CorsetForKMeansForLines:
         Q.weights = u
         all_indices = np.asarray(range(size))
         indices_sample = np.unique(np.random.choice(all_indices, m, True, probs))
-        #indices_sample = np.random.choice(all_indices, m, False, probs)
         S = Q.get_lines_at_indices(indices_sample)
         L_sum_of_weights = np.sum(L.weights)
         S_sum_of_weights = np.sum(S.weights)

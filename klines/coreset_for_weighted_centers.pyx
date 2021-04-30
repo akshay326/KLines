@@ -1,16 +1,9 @@
-#################################################################
-#     Corset for Weighted centers of points                     #
-#     Paper: http://people.csail.mit.edu/dannyf/outliers.pdf    #
-#     Implemented by Yair Marom. yairmrm@gmail.com              #
-#################################################################
-
-
+#cython: language_level=3
 from __future__ import division
 import copy
 import numpy as np
 from klines.set_of_points import SetOfPoints
 import math
-
 
 
 class CoresetForWeightedCenters:
@@ -21,7 +14,6 @@ class CoresetForWeightedCenters:
     def __init__(self, parameters_config):
         self.parameters_config = parameters_config
 
-    ######################################################################
 
     def recursive_robust_median(self, P, k, median_sample_size, recursive_median_closest_to_median_rate):
         """
@@ -41,8 +33,7 @@ class CoresetForWeightedCenters:
         Q = copy.deepcopy(P)
         q = []
         for _ in range(k):
-            size_of_sample = median_sample_size
-            q = Q.get_sample_of_points(size_of_sample)
+            q = Q.get_sample_of_points(median_sample_size)
             Q = Q.get_closest_points_to_set_of_points(q, recursive_median_closest_to_median_rate, type="by rate") #the median closest points
 
             size = Q.get_size()
@@ -97,7 +88,7 @@ class CoresetForWeightedCenters:
         v = temp_set.weights[indices_sample].reshape(1,-1)[0] # pick the weights by the indices we sampled
         return SetOfPoints(A, v)
 
-    ######################################################################
+
 
     def coreset_return_sensitivities(self, P, k, m):
         """
