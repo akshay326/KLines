@@ -41,15 +41,8 @@ def kmeans_missing(X, n_clusters, max_iter=10):
     X_hat = np.where(missing, mu, X)
 
     for i in range(max_iter):
-        if i > 0:
-            # initialize KMeans with the previous set of centroids. this is much
-            # faster and makes it easier to check convergence (since labels
-            # won't be permuted on every iteration), but might be more prone to
-            # getting stuck in local minima.
-            cls = KMeans(n_clusters, init=prev_centroids)
-        else:
-            # do multiple random initializations in parallel
-            cls = KMeans(n_clusters)
+        # do multiple random initializations in parallel
+        cls = KMeans(n_clusters)
 
         # perform clustering on the filled-in data
         labels = cls.fit_predict(X_hat)
@@ -63,6 +56,5 @@ def kmeans_missing(X, n_clusters, max_iter=10):
             break
 
         prev_labels = labels
-        prev_centroids = cls.cluster_centers_
 
     return labels, centroids, X_hat
