@@ -32,9 +32,11 @@ class TestClusteringBenchmarks(unittest.TestCase):
     '''
 
     def test_benchmark_Atom(self):
+        print('Clustering Atom.npz')
         npzfile = np.load('data/Atom.npz')
         X, y = npzfile['X'], npzfile['y']
         (N, _), k = X.shape, np.unique(y).shape[0]
+        print(f'#Datapoints {N}')
 
         X_incomplete = create_incomplete_matrix(X)
         labels, _, X_hat = kmeans_missing(X_incomplete, k)
@@ -84,9 +86,11 @@ class TestClusteringBenchmarks(unittest.TestCase):
 
 
     def test_benchmark_Chainlink(self):
+        print('Clustering Chainlink.npz')
         npzfile = np.load('data/Chainlink.npz')
         X, y = npzfile['X'], npzfile['y']
         (N, _), k = X.shape, np.unique(y).shape[0]
+        print(f'#Datapoints {N}')
 
         X_incomplete = create_incomplete_matrix(X)
         labels, _, X_hat = kmeans_missing(X_incomplete, k)
@@ -137,9 +141,11 @@ class TestClusteringBenchmarks(unittest.TestCase):
 
 
     def test_benchmark_EngyTime(self):
+        print('Clustering EngyTime.npz')
         npzfile = np.load('data/EngyTime.npz')
         X, y = npzfile['X'], npzfile['y']
         (N, _), k = X.shape, np.unique(y).shape[0]
+        print(f'#Datapoints {N}')
 
         X_incomplete = create_incomplete_matrix(X)
         labels, _, X_hat = kmeans_missing(X_incomplete, k)
@@ -190,9 +196,11 @@ class TestClusteringBenchmarks(unittest.TestCase):
 
 
     def test_benchmark_Hepta(self):
+        print('Clustering Hepta.npz')
         npzfile = np.load('data/Hepta.npz')
         X, y = npzfile['X'], npzfile['y']
         (N, _), k = X.shape, np.unique(y).shape[0]
+        print(f'#Datapoints {N}')
 
         X_incomplete = create_incomplete_matrix(X)
 
@@ -247,9 +255,11 @@ class TestClusteringBenchmarks(unittest.TestCase):
 
 
     def test_benchmark_Tetra(self):
+        print('Clustering Tetra.npz')
         npzfile = np.load('data/Tetra.npz')
         X, y = npzfile['X'], npzfile['y']
         (N, _), k = X.shape, np.unique(y).shape[0]
+        print(f'#Datapoints {N}')
 
         X_incomplete = create_incomplete_matrix(X)
 
@@ -304,9 +314,11 @@ class TestClusteringBenchmarks(unittest.TestCase):
 
 
     def test_benchmark_TwoDiamonds(self):
+        print('Clustering TwoDiamonds.npz')
         npzfile = np.load('data/TwoDiamonds.npz')
         X, y = npzfile['X'], npzfile['y']
         (N, _), k = X.shape, np.unique(y).shape[0]
+        print(f'#Datapoints {N}')
 
         X_incomplete = create_incomplete_matrix(X)
 
@@ -361,9 +373,11 @@ class TestClusteringBenchmarks(unittest.TestCase):
 
 
     def test_benchmark_Lsun3D(self):
+        print('Clustering Lsun3D.npz')
         npzfile = np.load('data/Lsun3D.npz')
         X, y = npzfile['X'], npzfile['y']
         (N, _), k = X.shape, np.unique(y).shape[0]
+        print(f'#Datapoints {N}')
 
         X_incomplete = create_incomplete_matrix(X)
 
