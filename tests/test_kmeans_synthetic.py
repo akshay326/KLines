@@ -38,8 +38,8 @@ class TestKMeansSynthetic(unittest.TestCase):
         X_incomplete = create_incomplete_matrix(X)
         _, _, X_hat = kmeans_missing(X_incomplete, k)
 
-        mse_sklearn = ((X - X_hat)**2).mean()
-        print(f'MSE sklearn: {mse_sklearn}')
+        sklearn_mse = ((X - X_hat)**2).mean()
+        print(f'MSE sklearn: {sklearn_mse}')
 
         displacements = np.nan_to_num(X_incomplete)
 
@@ -64,12 +64,13 @@ class TestKMeansSynthetic(unittest.TestCase):
         config.max_sensitivity_multiply_factor = 100  # for outliers in coresets
         config.number_of_remains = 20
 
-        SAMPLE_SIZE = 50   # coreset size grws linear w/ SAMPLE_SIZE
+        SAMPLE_SIZE = 50   
 
         ITER = 5
         klines_mse = np.zeros(ITER)
         scores = [[]] * ITER
         for i in range(ITER):
+            print(f'Running KLines iter {i+1} of {ITER}')
             X_klines, kl_labels = stream(L, k, m, SAMPLE_SIZE, config)
             klines_mse[i] = ((X - X_klines)**2).mean()
             scores[i] = metrics.homogeneity_completeness_v_measure(kl_labels, y)
@@ -77,7 +78,7 @@ class TestKMeansSynthetic(unittest.TestCase):
         print(f"Klines MSE: {klines_mse.mean()}")
         print(f"Scores: {np.array(scores).mean(axis=0)}")
 
-        assert mse_sklearn / klines_mse.mean() > 0.5
+        assert sklearn_mse / klines_mse.mean() > 0.5
 
 
     def test_synthetic_gaussian(self):
@@ -93,9 +94,9 @@ class TestKMeansSynthetic(unittest.TestCase):
         X_incomplete = create_incomplete_matrix(X)
         labels, _, X_hat = kmeans_missing(X_incomplete, k)
 
-        mse_sklearn = ((X - X_hat)**2).mean()
+        sklearn_mse = ((X - X_hat)**2).mean()
         score = metrics.homogeneity_completeness_v_measure(labels, y)
-        print(f'MSE sklearn: {mse_sklearn}')
+        print(f'MSE sklearn: {sklearn_mse}')
         print(f'MSE scores/measures: {score}')
 
         displacements = np.nan_to_num(X_incomplete)
@@ -122,13 +123,13 @@ class TestKMeansSynthetic(unittest.TestCase):
         config.number_of_remains = 20
 
         SAMPLE_SIZE = 50   # keep it < 100, works fast
-                           # coreset size grws linear w/ SAMPLE_SIZE
+                           
 
         ITER = 5
         klines_mse = np.zeros(ITER)
         scores = [[]] * ITER
         for i in range(ITER):
-            print(f'Running KLines iter {i} of {ITER}')
+            print(f'Running KLines iter {i+1} of {ITER}')
             X_klines, kl_labels = stream(L, k, m, SAMPLE_SIZE, config)
             klines_mse[i] = ((X - X_klines)**2).mean()
             scores[i] = metrics.homogeneity_completeness_v_measure(kl_labels, y)
@@ -136,7 +137,7 @@ class TestKMeansSynthetic(unittest.TestCase):
         print(f"Klines MSE: {klines_mse.mean()}")
         print(f"Scores: {np.array(scores).mean(axis=0)}")
 
-        assert mse_sklearn / klines_mse.mean() > 0.5
+        assert sklearn_mse / klines_mse.mean() > 0.5
 
 
     def test_synthetic_zero_red(self):
@@ -152,9 +153,9 @@ class TestKMeansSynthetic(unittest.TestCase):
         X_incomplete = create_incomplete_matrix(X)
         labels, _, X_hat = kmeans_missing(X_incomplete, k)
 
-        mse_sklearn = ((X - X_hat)**2).mean()
+        sklearn_mse = ((X - X_hat)**2).mean()
         score = metrics.homogeneity_completeness_v_measure(labels, y)
-        print(f'MSE sklearn: {mse_sklearn}')
+        print(f'MSE sklearn: {sklearn_mse}')
         print(f'MSE scores/measures: {score}')
 
         displacements = np.nan_to_num(X_incomplete)
@@ -181,13 +182,13 @@ class TestKMeansSynthetic(unittest.TestCase):
         config.number_of_remains = 20
 
         SAMPLE_SIZE = 50   # keep it < 100, works fast
-                           # coreset size grws linear w/ SAMPLE_SIZE
+                           
 
         ITER = 5
         klines_mse = np.zeros(ITER)
         scores = [[]] * ITER
         for i in range(ITER):
-            print(f'Running KLines iter {i} of {ITER}')
+            print(f'Running KLines iter {i+1} of {ITER}')
             X_klines, kl_labels = stream(L, k, m, SAMPLE_SIZE, config)
             klines_mse[i] = ((X - X_klines)**2).mean()
             scores[i] = metrics.homogeneity_completeness_v_measure(kl_labels, y)
@@ -195,7 +196,7 @@ class TestKMeansSynthetic(unittest.TestCase):
         print(f"Klines MSE: {klines_mse.mean()}")
         print(f"Scores: {np.array(scores).mean(axis=0)}")
 
-        assert mse_sklearn / klines_mse.mean() > 0.5
+        assert sklearn_mse / klines_mse.mean() > 0.5
 
 
     def test_synthetic_zero_red(self):
@@ -211,9 +212,9 @@ class TestKMeansSynthetic(unittest.TestCase):
         X_incomplete = create_incomplete_matrix(X)
         labels, _, X_hat = kmeans_missing(X_incomplete, k)
 
-        mse_sklearn = ((X - X_hat)**2).mean()
+        sklearn_mse = ((X - X_hat)**2).mean()
         score = metrics.homogeneity_completeness_v_measure(labels, y)
-        print(f'MSE sklearn: {mse_sklearn}')
+        print(f'MSE sklearn: {sklearn_mse}')
         print(f'MSE scores/measures: {score}')
 
         displacements = np.nan_to_num(X_incomplete)
@@ -240,13 +241,13 @@ class TestKMeansSynthetic(unittest.TestCase):
         config.number_of_remains = 20
 
         SAMPLE_SIZE = 50   # keep it < 100, works fast
-                           # coreset size grws linear w/ SAMPLE_SIZE
+                           
 
         ITER = 5
         klines_mse = np.zeros(ITER)
         scores = [[]] * ITER
         for i in range(ITER):
-            print(f'Running KLines iter {i} of {ITER}')
+            print(f'Running KLines iter {i+1} of {ITER}')
             X_klines, kl_labels = stream(L, k, m, SAMPLE_SIZE, config)
             klines_mse[i] = ((X - X_klines)**2).mean()
             scores[i] = metrics.homogeneity_completeness_v_measure(kl_labels, y)
@@ -254,9 +255,7 @@ class TestKMeansSynthetic(unittest.TestCase):
         print(f"Klines MSE: {klines_mse.mean()}")
         print(f"Scores: {np.array(scores).mean(axis=0)}")
 
-        assert mse_sklearn / klines_mse.mean() > 0.5
+        assert sklearn_mse / klines_mse.mean() > 0.5
 
 
 
-if __name__ == '__main__':
-    unittest.main()

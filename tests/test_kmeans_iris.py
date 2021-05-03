@@ -136,5 +136,3 @@ class TestKMeansIris(unittest.TestCase):
 
         assert klines_mse_sklearn/np.array(klines_mse).mean() < 0.6
 
-if __name__ == '__main__':
-    unittest.main()

@@ -53,7 +53,7 @@ class TestMatrixCompletion(unittest.TestCase):
 
         config.number_of_remains = 20
 
-        SAMPLE_SIZE = int(N*0.5)   # coreset size grws linear w/ SAMPLE_SIZE
+        SAMPLE_SIZE = int(N*0.5)   
 
         streamer = CoresetStreamer(SAMPLE_SIZE, k, config)
         coreset = streamer.stream(L)
@@ -80,5 +80,3 @@ class TestMatrixCompletion(unittest.TestCase):
         assert np.average(mse_ratios) < 0.5
 
   
-if __name__ == '__main__':
-    unittest.main()

@@ -15,7 +15,7 @@ class TestOfflineClusteringSpeed(unittest.TestCase):
         m = int(N*0.07)  # coreset size ~ reduction ratio
         tau = 1e-3
 
-        straight_roads = np.load('tests/road_segments_china.npy')
+        straight_roads = np.load('data/road_segments_china.npy')
         straight_roads = straight_roads[np.random.choice(straight_roads.shape[0], N, replace=False)]
         L = [[x[0][0], x[0][1], x[1][0], x[1][1]] for x in straight_roads]
 
@@ -82,5 +82,3 @@ class TestOfflineClusteringSpeed(unittest.TestCase):
         pr.print_stats(sort='cumtime')
 
 
-if __name__ == '__main__':
-    unittest.main()
