@@ -2,35 +2,20 @@
 # coding: utf-8
 
 import unittest
-from tests.utils import create_incomplete_matrix, kmeans_missing, ParameterConfig
+from tests.utils import create_incomplete_matrix, kmeans_missing, ParameterConfig, customStreamer
 import numpy as np
 import math
 from sklearn.datasets import make_blobs, make_gaussian_quantiles, make_classification
 from sklearn import metrics
-from klines import SetOfLines, CoresetForWeightedCenters, CorsetForKMeansForLines, CoresetStreamer
-
-
-def stream(L, k, m, SAMPLE_SIZE, config):
-    streamer = CoresetStreamer(SAMPLE_SIZE, k, config)
-    coreset = streamer.stream(L)
-    L1 = coreset[0]
-    
-    _, B, _ = CorsetForKMeansForLines(config).coreset(L1, k, int(L1.get_size()*0.6), True)
-    cwc = CoresetForWeightedCenters(config)
-    B = cwc.coreset(B, k, m)
-
-    X_klines = L.get_projected_centers(B)    
-    kl_labels = L.get_indices_clusters(B)
-    
-    return X_klines, kl_labels
+from klines import SetOfLines
 
 
 class TestKMeansSynthetic(unittest.TestCase):
     def test_synthetic_large(self):
         '''
-            large number of data points, high dimensionality
+            data with #features ~ 2x #classes
         '''
-        N = 10**4
+        N = 10**3
         d = 8
         k = 4
         X, y = make_blobs(n_samples=N, n_features=d, centers=k, cluster_std=4.0)
@@ -71,7 +56,7 @@ class TestKMeansSynthetic(unittest.TestCase):
         scores = [[]] * ITER
         for i in range(ITER):
             print(f'Running KLines iter {i+1} of {ITER}')
-            X_klines, kl_labels = stream(L, k, m, SAMPLE_SIZE, config)
+            X_klines, kl_labels = customStreamer(L, k, m, SAMPLE_SIZE, config)
             klines_mse[i] = ((X - X_klines)**2).mean()
             scores[i] = metrics.homogeneity_completeness_v_measure(kl_labels, y)
 
@@ -130,7 +115,7 @@ class TestKMeansSynthetic(unittest.TestCase):
         scores = [[]] * ITER
         for i in range(ITER):
             print(f'Running KLines iter {i+1} of {ITER}')
-            X_klines, kl_labels = stream(L, k, m, SAMPLE_SIZE, config)
+            X_klines, kl_labels = customStreamer(L, k, m, SAMPLE_SIZE, config)
             klines_mse[i] = ((X - X_klines)**2).mean()
             scores[i] = metrics.homogeneity_completeness_v_measure(kl_labels, y)
 
@@ -189,7 +174,7 @@ class TestKMeansSynthetic(unittest.TestCase):
         scores = [[]] * ITER
         for i in range(ITER):
             print(f'Running KLines iter {i+1} of {ITER}')
-            X_klines, kl_labels = stream(L, k, m, SAMPLE_SIZE, config)
+            X_klines, kl_labels = customStreamer(L, k, m, SAMPLE_SIZE, config)
             klines_mse[i] = ((X - X_klines)**2).mean()
             scores[i] = metrics.homogeneity_completeness_v_measure(kl_labels, y)
 
@@ -248,7 +233,7 @@ class TestKMeansSynthetic(unittest.TestCase):
         scores = [[]] * ITER
         for i in range(ITER):
             print(f'Running KLines iter {i+1} of {ITER}')
-            X_klines, kl_labels = stream(L, k, m, SAMPLE_SIZE, config)
+            X_klines, kl_labels = customStreamer(L, k, m, SAMPLE_SIZE, config)
             klines_mse[i] = ((X - X_klines)**2).mean()
             scores[i] = metrics.homogeneity_completeness_v_measure(kl_labels, y)
 
@@ -256,6 +241,3 @@ class TestKMeansSynthetic(unittest.TestCase):
         print(f"Scores: {np.array(scores).mean(axis=0)}")
 
         assert sklearn_mse / klines_mse.mean() > 0.5
-
-
-

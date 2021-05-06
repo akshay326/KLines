@@ -3,6 +3,7 @@
 import numpy as np
 import math
 from klines import SetOfLines, CorsetForKMeansForLines, CoresetStreamer
+from tests.utils import create_incomplete_matrix, ParameterConfig
 import unittest
 
 
@@ -13,13 +14,7 @@ class TestMatrixCompletion(unittest.TestCase):
         X = np.dot(np.random.randn(N, inner_rank), np.random.randn(inner_rank, d))
         MSE = (X ** 2).mean()
 
-        X_incomplete = X.copy()
-        for i in range(N):  # missing entries indicated with NaN
-            X_incomplete[i, np.random.randint(d)] = np.nan
-        # X is the complete data matrix
-        # X_incomplete has the same values as X except a subset have been replace with NaN
-
-        # assert(np.version.full_version == '1.16.5')  # later revisions hv slower array lookups
+        X_incomplete = create_incomplete_matrix(X)
 
         displacements = np.nan_to_num(X_incomplete)
         spans = np.nan_to_num(X_incomplete)
@@ -28,10 +23,6 @@ class TestMatrixCompletion(unittest.TestCase):
 
         L = SetOfLines(spans, displacements, np.ones(N), np.ones(N))
 
-        class ParameterConfig:
-            def __init__(self):
-                pass
-            
         config = ParameterConfig()
 
         ## data

@@ -4,6 +4,7 @@ import timeit
 import numpy as np
 import math
 from klines import SetOfLines, CorsetForKMeansForLines, CoresetForWeightedCenters
+from tests.utils import create_incomplete_matrix, kmeans_missing, ParameterConfig
 import unittest
 
 
@@ -21,10 +22,6 @@ class TestOfflineClusteringSpeed(unittest.TestCase):
 
         ## construct set of lines
         L = SetOfLines([], [], [], [], L, True)
-
-        class ParameterConfig:
-            def __init__(self):
-                pass
 
         config = ParameterConfig()
         config.a_b_approx_minimum_number_of_lines = int(N*0.01) # constant 100, line 2, algo 2 BI-CRITERIA

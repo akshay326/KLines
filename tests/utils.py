@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.cluster import KMeans
+from klines import CoresetForWeightedCenters, CorsetForKMeansForLines, CoresetStreamer
 
 
 class ParameterConfig:
@@ -58,3 +59,22 @@ def kmeans_missing(X, n_clusters, max_iter=10):
         prev_labels = labels
 
     return labels, centroids, X_hat
+
+
+def customStreamer(L, k, m, SAMPLE_SIZE, config):
+    """
+        returns projected centers and clusters
+    """
+    streamer = CoresetStreamer(SAMPLE_SIZE, k, config)
+    # note this is O(sample^2 * n) + O(m)
+    coreset = streamer.stream(L)
+    L1 = coreset[0]
+    
+    _, B, _ = CorsetForKMeansForLines(config).coreset(L1, k, int(L1.get_size()*0.6), True)
+    cwc = CoresetForWeightedCenters(config)
+    B = cwc.coreset(B, k, m)
+
+    X_klines = L.get_projected_centers(B)    
+    kl_labels = L.get_indices_clusters(B)
+    
+    return X_klines, kl_labels
